@@ -1,6 +1,6 @@
 # /bin/bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install micro -y
+sudo apt install micro tcptrack bmon iftop nethogs -y
 
 
 # SWAP SETUP
