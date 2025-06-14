@@ -21,7 +21,7 @@ sudo systemctl restart systemd-jounrald
 
 
 # INSTALL APPS
-bash ./install_wg.ssh
+bash ./install_wg.sh
 
 
 # CLEAR & REBOOT
