@@ -6,14 +6,14 @@ GOALS:
 - [] ос, софт, контейнеры должны поместить в 5 ГБ на диске
 
 SOFT:
-- [] Docker (+Docker Swarm)
 - [] Syncthing
 - [] Wireguard
 - [] Xray server
 - [] FTP Server
+<!-- - [] Docker (+Docker Swarm) -->
 
 TODO:
-- [X] скрипт для первичной настройки виртуалки
-- [] определить список сервисов, которые будут работать на vps
-- [] освоить docker и сопутствующие инструменты для развертывания
+- [X] server setup script
+- [] list of services for vps
+- [] does will docker be used?
 - [] 
