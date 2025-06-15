@@ -16,6 +16,7 @@ SERVER_PUB_NIC = None
 SERVER_WG_NIC = "wg0"
 SERVER_WG_IPV4 = "10.66.66.1"
 SERVER_PORT = "56023"
+MTU = "1420"
 SERVER_PRIV_KEY = None
 SERVER_PUB_KEY = None
 
@@ -25,18 +26,24 @@ ALLOWED_IPS = "0.0.0.0/0,::0"
 
 
 def run(cmd):
-    print(f"Running: {cmd}")
+    print(f"Running: \"{cmd}\"")
     result = subprocess.run(
         cmd.split(),
-        capture_output=True, text=True, check=True
+        capture_output=True, text=True, check=False
     )
+
+    if result.returncode != 0:
+        raise RuntimeError(f"ERROR: {result.stderr}")
+
     return result.stdout.strip().splitlines()
 
 
 # INITIALIZTION
-def is_running_as_root() -> bool:
+def check_root_permission():
     # TODO: mb that way isn't too good
-    return 'SUDO_UID' in os.environ
+    if 'SUDO_UID'not  in os.environ:
+        raise RuntimeError("ERROR: run script with sudo\n"
+                           "EXAMPLE: sudo python3 ./setup_wg.py")
 
 
 def check_os_support():
@@ -107,36 +114,38 @@ def install_wireguard():
     SERVER_PUB_IP = get_public_ip()
     SERVER_PUB_NIC = get_public_interface()
 
-    if (currentOS == "Ubuntu"):
-        run("apt-get install -y wireguard iptables resolvconf qrencode")
-    else:
-        raise RuntimeError("ERROR: Your OS does NOT supported")
+    # if (currentOS == "Ubuntu"):
+    #     run("apt-get install -y wireguard iptables resolvconf qrencode")
+    # else:
+    #     raise RuntimeError("ERROR: Your OS does NOT supported")
     
-    run("mkdir /etc/wireguard")
+    # run("mkdir /etc/wireguard")
 
-    run("chmod 600 -R /etc/wireguard/")
+    # run("chmod 600 -R /etc/wireguard/")
 
-    SERVER_PRIV_KEY = run("wg genkey")
-    SERVER_PRIV_KEY = run(f"{SERVER_PRIV_KEY} | wg pubkey")
+    SERVER_PRIV_KEY = run("wg genkey")[0]
+    SERVER_PRIV_KEY = run(f"echo {SERVER_PRIV_KEY} | wg pubkey")
 
-    wireguard_server_config = f"SERVER_PUB_IP={SERVER_PUB_IP}"
-    f"SERVER_WG_NIC={SERVER_WG_NIC}"
-    f"SERVER_WG_IPV4={SERVER_WG_IPV4}"
-    f"SERVER_PORT={SERVER_PORT}"
-    f"SERVER_PRIV_KEY={SERVER_PRIV_KEY}"
-    f"SERVER_PUB_KEY={SERVER_PUB_KEY}"
-    f"CLIENT_DNS_1={CLIENT_DNS_1}"
-    f"CLIENT_DNS_2={CLIENT_DNS_2}"
-    f"ALLOWED_IPS={ALLOWED_IPS}"
+    wireguard_server_config = f"""SERVER_PUB_IP={SERVER_PUB_IP}
+SERVER_WG_NIC={SERVER_WG_NIC}
+SERVER_WG_IPV4={SERVER_WG_IPV4}
+SERVER_PORT={SERVER_PORT}
+SERVER_PRIV_KEY={SERVER_PRIV_KEY}
+SERVER_PUB_KEY={SERVER_PUB_KEY}
+CLIENT_DNS_1={CLIENT_DNS_1}
+CLIENT_DNS_2={CLIENT_DNS_2}
+ALLOWED_IPS={ALLOWED_IPS}"""
 
-    with open("/etc/wireguard/params", "w+") as server_config:
+    with open("/etc/wireguard/params", "w") as server_config:
         server_config.write(wireguard_server_config)
 
-    wireguard_server_interface = f"Address = {SERVER_WG_IPV4}/24"
-    f"SERVER_PORT= {SERVER_PORT}"
-    f"PrivateKey= {SERVER_PRIV_KEY}" #TODO: write to conf
+    wireguard_server_interface = f"""Address = {SERVER_WG_IPV4}/24
+ListenPort = {SERVER_PORT}
+PrivateKey = {SERVER_PRIV_KEY}
+MTU = {MTU}"""
     
-
+    with open(f"/etc/wireguard/{SERVER_WG_NIC}.conf") as wgconf:
+        wgconf.write(wireguard_server_interface)
     
 
 
@@ -159,7 +168,7 @@ def generate_server_keys():
 
 
 def main():
-    root_acess = is_running_as_root()
+    check_root_permission()
     check_os_support()
     check_virtualization_support()
 
@@ -167,7 +176,6 @@ def main():
         manage_menu()
     else:
         install_wireguard()
-        print(currentOS)
 
     # prepare_server_info()
 
