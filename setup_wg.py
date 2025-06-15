@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import platform
 import shutil
 import subprocess
@@ -10,17 +11,36 @@ SUPPORTED_OS = ["Ubuntu", "Debian"] #TODO: add arch-like
 
 currentOS = None
 
-serverPublicIP = None
-serverPublicName = None
-serverIpv4 = None
-serverPort = "56023"
+SERVER_PUB_IP = None
+SERVER_PUB_NIC = None
+SERVER_WG_NIC = "wg0"
+SERVER_WG_IPV4 = "10.66.66.1"
+SERVER_PORT = "56023"
+SERVER_PRIV_KEY = None
+SERVER_PUB_KEY = None
+
+CLIENT_DNS_1 = "1.1.1.1"
+CLIENT_DNS_2 = "1.0s.0.1"
+ALLOWED_IPS = "0.0.0.0/0,::0"
 
 
+def run(cmd):
+    print(f"Running: {cmd}")
+    result = subprocess.run(
+        cmd.split(),
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip().splitlines()
+
+
+# INITIALIZTION
 def is_running_as_root() -> bool:
+    # TODO: mb that way isn't too good
     return 'SUDO_UID' in os.environ
 
 
 def check_os_support():
+    global currentOS
     os_info = platform.freedesktop_os_release()
     currentOS = os_info["NAME"]
     if currentOS not in SUPPORTED_OS:
@@ -57,21 +77,84 @@ def check_virtualization_support():
 
 
 
-def prepare_server_info():
+# INSTALLATION
+def install_wireguard():
     def get_public_ip():
-        result = subprocess.run(["ip", "-4", "addr"], capture_output=True, text=True, check=True)
-        lines = result.stdout.strip().splitlines()
+        # TODO: IPv6
+        result = run("ip -4 addr")
+        lines = [result[i+1].strip() for i in range(0, len(result), 3)]
 
         for line in lines:
-            line = line.strip()
             if "inet" in line and "scope global" in line:
-                ip_part = line.split()[1]
-                ip_addr = ip_part.split("/")[0]
+                return line.split()[1]
 
-    serverPublicIP = get_public_ip()
-    print(serverPublicIP)
-    pass
+        raise RuntimeError("ERROR: there is no public ip, check ur connection to network")
+
+    def get_public_interface():
+        result = run("ip -4 route ls")
+        for line in result:
+            if "default" in line and "dev" in line:
+                line = line.strip().split()
+                index = line.index("dev") + 1
+                return line[index]
+
+        raise RuntimeError("ERROR: there no public interface, check ur connection to network")
+
+    global SERVER_PUB_IP
+    global SERVER_PUB_NIC
+    global SERVER_PUB_NIC
+    global SERVER_PUB_NIC
+    SERVER_PUB_IP = get_public_ip()
+    SERVER_PUB_NIC = get_public_interface()
+
+    if (currentOS == "Ubuntu"):
+        run("apt-get install -y wireguard iptables resolvconf qrencode")
+    else:
+        raise RuntimeError("ERROR: Your OS does NOT supported")
     
+    run("mkdir /etc/wireguard")
+
+    run("chmod 600 -R /etc/wireguard/")
+
+    SERVER_PRIV_KEY = run("wg genkey")
+    SERVER_PRIV_KEY = run(f"{SERVER_PRIV_KEY} | wg pubkey")
+
+    wireguard_server_config = f"SERVER_PUB_IP={SERVER_PUB_IP}"
+    f"SERVER_WG_NIC={SERVER_WG_NIC}"
+    f"SERVER_WG_IPV4={SERVER_WG_IPV4}"
+    f"SERVER_PORT={SERVER_PORT}"
+    f"SERVER_PRIV_KEY={SERVER_PRIV_KEY}"
+    f"SERVER_PUB_KEY={SERVER_PUB_KEY}"
+    f"CLIENT_DNS_1={CLIENT_DNS_1}"
+    f"CLIENT_DNS_2={CLIENT_DNS_2}"
+    f"ALLOWED_IPS={ALLOWED_IPS}"
+
+    with open("/etc/wireguard/params", "w+") as server_config:
+        server_config.write(wireguard_server_config)
+
+    wireguard_server_interface = f"Address = {SERVER_WG_IPV4}/24"
+    f"SERVER_PORT= {SERVER_PORT}"
+    f"PrivateKey= {SERVER_PRIV_KEY}" #TODO: write to conf
+    
+
+    
+
+
+
+# MEN
+def manage_menu():
+    pass
+
+
+def generate_server_keys():
+    pass
+
+# def wireguard_settings():
+#     pass
+
+# def wg_server_interface():
+#     pass
+
 
 
 
@@ -80,7 +163,17 @@ def main():
     check_os_support()
     check_virtualization_support()
 
+    if (os.path.exists("/etc/wireguard/params")):
+        manage_menu()
+    else:
+        install_wireguard()
+        print(currentOS)
+
+    # prepare_server_info()
 
 
-if __name__ == "setup_wg.py":
-    main()
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(e)

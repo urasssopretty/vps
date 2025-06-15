@@ -1,6 +1,6 @@
 # /bin/bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install micro tcptrack bmon iftop nethogs -y
+sudo apt install micro git tcptrack bmon iftop nethogs -y
 
 
 # SWAP SETUP
@@ -21,8 +21,7 @@ sudo systemctl restart systemd-jounrald
 
 
 # INSTALL APPS
-bash ./install_wg.sh
-
+git clone https://github.com/angristan/wireguard-install.git
 
 # CLEAR & REBOOT
 # sudo journalctl --vacuum-size=5M
