@@ -1,0 +1,78 @@
+{
+    "log": {
+      "loglevel": "warning",
+      "access": "/usr/local/etc/xray/access_log.log",
+      "error": "/usr/local/etc/xray/error_log.log"
+    },
+    "inbounds": [
+      {
+        // "listen": "109.120.142.65",
+        "port": 443,
+        "protocol": "vless",
+        "tag": "reality-in",
+        "settings": {
+          "clients": [
+            {
+              "id": "1f7585c5-e174-4f3b-9f02-52a63e1a1bc2",
+              "email": "user1",
+              "flow": "xtls-rprx-vision"
+            },
+            {
+              "id": "ceab5c46-d9e6-4ace-b578-4360f5c5c804",
+              "email": "user2",
+              "flow": "xtls-rprx-vision"
+            }
+          ],
+          "decryption": "none"
+        },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": {
+            "show": false,
+            "dest": "www.google.com:443",
+            "xver": 0,
+            "serverNames": [
+              "www.google.com"
+            ],
+            "privateKey": "UMLV_3HN4sWiskEMmtcDw11hMF5LiVAGyInfm2TyVnw",
+            "minClientVer": "",
+            "maxClientVer": "",
+            "maxTimeDiff": 0,
+            "shortIds": [
+                "2678f420a2e47b0f",
+                "6d3c428aef508a7f"
+            ]
+          }
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": [
+            "http",
+            "tls",
+            "quic"
+          ]
+        }
+      }
+    ],
+    "outbounds": [
+      {
+        "protocol": "freedom",
+        "tag": "direct"
+      },
+      {
+        "protocol": "blackhole",
+        "tag": "block"
+      }
+    ],
+    "routing": {
+      "rules": [
+        {
+          "type": "field",
+          "protocol": "bittorrent",
+          "outboundTag": "block"
+        }
+      ],
+      "domainStrategy": "IPIfNonMatch"
+    }
+}

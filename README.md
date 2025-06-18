@@ -1,19 +1,14 @@
-# vps
+# VPS SETUP
 
 CHECK ALPINE LINUX (8MB RAM ON START)
 
-GOALS:
-- [] ос, софт, контейнеры должны поместить в 5 ГБ на диске
-
-SOFT:
+### TODO:
+- [] update system, install soft
+- [] change ssh settings
+- [X] Wireguard
+- [] Xray
 - [] Syncthing
-- [] Wireguard
-- [] Xray server
-- [] FTP Server
-<!-- - [] Docker (+Docker Swarm) -->
-
-TODO:
-- [X] server setup script
-- [] list of services for vps
-- [] does will docker be used?
-- [] 
+- [] Online file browser
+- [] Xuyncha Zine Bot
+- [] firewalld or iptables, setup for block traffic from others
+<!-- - [] Docker (+Docker Swarm) -->?

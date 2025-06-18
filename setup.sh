@@ -21,7 +21,12 @@ sudo systemctl restart systemd-jounrald
 
 
 # INSTALL APPS
-git clone https://github.com/angristan/wireguard-install.git
+# wireguard
+curl -L https://install.pivpn.io | bash
+
+# xray
+bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+
 
 # CLEAR & REBOOT
 # sudo journalctl --vacuum-size=5M
